@@ -212,6 +212,181 @@ body {
   color: var(--accent);
 }
 
+/* ---- card actions / editing ---- */
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.6rem 1rem 0.85rem 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.card-action-btn {
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--header-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+}
+
+.card-action-btn.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+}
+
+.icon-svg {
+  display: block;
+}
+
+.card-action-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.card-action-btn.primary {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.card-action-btn.primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.card-action-btn.danger:hover {
+  color: var(--important);
+  border-color: color-mix(in srgb, var(--important) 55%, var(--border));
+}
+
+.card.editing {
+  cursor: default;
+}
+
+.card-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+}
+
+.card-edit-form input[type="text"],
+.edit-title-input,
+.edit-description-input {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  width: 100%;
+}
+
+.edit-title-input {
+  font-weight: 700;
+}
+
+.edit-description-input {
+  min-height: 5rem;
+  resize: vertical;
+  font-size: 0.9rem;
+}
+
+.trl-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem;
+  align-items: center;
+}
+
+.trl-picker-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--trl-color);
+  background: transparent;
+  border: 1px solid var(--trl-color);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.trl-picker-btn.active {
+  color: var(--bg);
+  background: var(--trl-color);
+}
+
+.important-toggle-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.4rem;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  float: right;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.important-toggle-btn.active {
+  color: var(--bg);
+  background: var(--important);
+  border-color: var(--important);
+}
+
+.contact-edit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.contact-edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "name name"
+    "email institution";
+  gap: 0.3rem;
+}
+
+.contact-name-input {
+  grid-area: name;
+}
+
+.contact-email-input {
+  grid-area: email;
+}
+
+.contact-institution-input {
+  grid-area: institution;
+}
+
+.contact-edit-row input[type="text"] {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.45rem;
+}
+
+.card-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
 /* ---- error page ---- */
 
 .error-page {
