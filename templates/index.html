@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ root.title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-mtime="{{ mtime }}">
+  <div id="tree-container">
+    <svg id="connectors"></svg>
+    <div id="columns"></div>
+  </div>
+  <script>
+    window.__TREE_DATA__ = {{ root | tojson }};
+  </script>
+  <script src="/static/script.js"></script>
+</body>
+</html>

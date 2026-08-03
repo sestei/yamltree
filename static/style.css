@@ -1,0 +1,246 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0d12;
+  --surface: #161a24;
+  --surface-hover: #1e2330;
+  --header-bg: #1a1f2b;
+  --header-bg-selected: #263049;
+  --border: #2a2f3d;
+  --border-strong: #414a63;
+  --text: #e8eaf0;
+  --text-dim: #9aa0b4;
+  --accent: #7c9bff;
+  --accent-strong: #5c7ce0;
+  --important: #e8b64f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* ---- horizontal tree layout ---- */
+
+#tree-container {
+  position: relative;
+  height: calc(100vh - 2.5rem);
+  overflow: auto;
+}
+
+#connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.connector-line {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+#columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+  position: relative;
+  width: max-content;
+}
+
+.tree-column {
+  flex: 0 0 300px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.card.has-children {
+  cursor: pointer;
+}
+
+.card.selected {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.card.has-trl {
+  border-color: var(--trl-color);
+}
+
+.card.important {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--important) 14%, var(--surface)), var(--surface) 60%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--important) 55%, transparent);
+}
+
+.card.important.selected {
+  box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 1px color-mix(in srgb, var(--important) 55%, transparent);
+}
+
+.card.important-descendant {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--important) 45%, transparent);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--header-bg);
+}
+
+.card.important > .card-header {
+  background: color-mix(in srgb, var(--important) 20%, var(--header-bg));
+}
+
+.card.selected > .card-header {
+  background: var(--header-bg-selected);
+}
+
+.card.important.selected > .card-header {
+  background: color-mix(in srgb, var(--important) 20%, var(--header-bg-selected));
+}
+
+.card.has-children:hover > .card-header {
+  background: var(--surface-hover);
+}
+
+.card-title {
+  flex: 1 1 auto;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.card-flag {
+  color: var(--important);
+  font-size: 0.9em;
+}
+
+.card-trl-badge {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--trl-color);
+  color: var(--trl-color);
+  white-space: nowrap;
+}
+
+.card-toggle {
+  color: var(--accent);
+  font-size: 0.85em;
+  transition: transform 0.15s ease;
+}
+
+.card.selected > .card-header > .card-toggle {
+  transform: rotate(90deg);
+}
+
+.card-contacts {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 1rem 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.card-contacts li {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.contact-name {
+  font-weight: 700;
+}
+
+.contact-institution {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.contact-email {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.contact-email:hover {
+  text-decoration: underline;
+}
+
+.card-description {
+  padding: 0.75rem 1rem 1rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.card-description p:first-child {
+  margin-top: 0;
+}
+
+.card-description p:last-child {
+  margin-bottom: 0;
+}
+
+.card-description a {
+  color: var(--accent);
+}
+
+/* ---- error page ---- */
+
+.error-page {
+  max-width: 700px;
+  margin: 3rem auto;
+}
+
+.error-page h1 {
+  font-weight: 700;
+}
+
+.error-message {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.error-location {
+  color: var(--text-dim);
+}
+
+.error-snippet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  color: var(--text);
+}
+
+.error-hint {
+  color: var(--text-dim);
+}

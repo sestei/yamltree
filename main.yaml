@@ -1,0 +1,99 @@
+title: Root Card
+description: >
+  This is a longer description of the **project**.
+  It can span multiple lines and provide detailed
+  information about the purpose, scope, and objectives
+  of the project. The _description_ can also include
+  any relevant background information or context
+  that helps to understand the project's significance.
+subcards:
+  - title: Subcard 1
+    status: trl2
+    contacts:
+      - name: John Doe
+        email: doe@does.nl
+        institution: University of Somewhere
+      - name: Jane Smith
+        institution: ETO
+    description: >
+        This is the description for subcard 1.
+        It provides additional details and context
+        related to the specific aspect of the project
+        that this subcard addresses.
+    subcards:
+      - title: Sub-subcard 1
+        description: >
+          This is the description for sub-subcard 1.
+          It delves deeper into the topic covered by
+          subcard 1, offering more granular insights
+          and information.
+        subcards:
+          - title: Level 4 Card A
+            description: >
+              A fourth-level card nested under sub-subcard 1,
+              used to check how deeper branches render.
+            subcards:
+              - title: Level 5 Card A1
+                contacts:
+                  - name: Priya Patel
+                    email: priya.patel@example.org
+                    institution: Somewhere Institute
+                description: >
+                  A fifth-level card, still going deeper into
+                  the same branch of the tree.
+                subcards:
+                  - title: Level 6 Card A1a
+                    status: important
+                    description: >
+                      A sixth-level leaf card, the deepest point
+                      in this branch of the sample tree.
+              - title: Level 5 Card A2
+                status: trl8
+                description: >
+                  A second fifth-level card, sitting alongside
+                  Level 5 Card A1 under the same Level 4 parent.
+          - title: Level 4 Card B
+            description: >
+              A second fourth-level card, sitting alongside
+              Level 4 Card A under Sub-subcard 1.
+      - title: Sub-subcard 2
+        contacts:
+          - name: John Doe
+            email: doe@does.nl
+            institution: University of Somewhere
+          - name: Jane Smith
+            institution: ETO
+        description: >
+          This is the _description_ for sub-subcard 2.
+          It continues to explore the nuances of the
+          subject matter, providing further elaboration
+          and context.
+      - title: Sub-subcard 3
+        description: >
+          A third sub-subcard, added alongside sub-subcard 1
+          and sub-subcard 2 to test more siblings at this level.
+  - title: Subcard 2
+    description: >
+      This is the description for subcard 2.
+      It elaborates on another facet of the project,
+      offering insights and information pertinent to
+      this particular subcomponent.
+    subcards:
+      - title: Subcard 2, Child A
+        status: important trl1
+        description: >
+          A child of Subcard 2, showing that sideways
+          siblings at the root level can also have their
+          own children.
+      - title: Subcard 2, Child B
+        contacts:
+          - name: Marcus Lee
+            institution: ETO
+        description: >
+          A second child of Subcard 2.
+  - title: Subcard 3
+    status: trl6
+    description: >
+      A third top-level subcard, added alongside Subcard 1
+      and Subcard 2 to test more siblings at the root level.
+
