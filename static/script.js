@@ -566,6 +566,13 @@
       if (titleInputToFocus) {
         titleInputToFocus.focus();
         titleInputToFocus.select();
+        titleInputToFocus.closest(".card").scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+    } else if (path.length) {
+      var selectedCards = columnsEl.querySelectorAll(".card.selected");
+      var deepestSelected = selectedCards[selectedCards.length - 1];
+      if (deepestSelected) {
+        deepestSelected.scrollIntoView({ block: "nearest", inline: "nearest" });
       }
     }
   }

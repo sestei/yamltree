@@ -69,9 +69,7 @@ subcards:
       and context.
     subcards:
     - title: New Card
-      description: Add a description.
     - title: Same level
-      description: Add a description.
       status: trl5 important
   - title: Sub-subcard 3
     description: >
@@ -115,4 +113,3 @@ archive:
   contacts:
   - name: Sebastian
 - title: New Card
-  description: Add a description.

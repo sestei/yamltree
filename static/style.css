@@ -39,6 +39,8 @@ body {
   position: relative;
   height: calc(100vh - 2.5rem);
   overflow: auto;
+  padding: 3px;
+  margin: -3px;
 }
 
 #connectors {

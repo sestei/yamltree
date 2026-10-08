@@ -241,7 +241,7 @@ def api_insert_card():
     except (KeyError, IndexError, TypeError):
         return jsonify(error="card not found"), 404
 
-    new_card = {"title": "New Card", "description": "Add a description."}
+    new_card = {"title": "New Card"}
 
     if kind == "child":
         if node.get("subcards"):
