@@ -44,6 +44,10 @@ EDGE_COLOR = "#777777"
 BORDER_DEFAULT = "#999999"
 IMPORTANT_FILL = "#fff7cc"
 IMPORTANT_STAR_COLOR = "#b8860b"
+BADGE_FONT = "Helvetica-Bold"
+BADGE_SIZE = 7
+BADGE_HEIGHT = 13
+BADGE_PAD_X = 6
 
 
 def _hex(r, g, b):
@@ -121,6 +125,8 @@ class Box:
         self.secondary = 0.0
         self.height = 0.0
         self.trl = None
+        self.effective_trl = None
+        self.trl_inherited = False
         self.important = False
         self.title_lines = []
         self.contact_lines = []
@@ -146,7 +152,10 @@ class Box:
                 if para:
                     self.desc_lines.extend(wrap_to_width(para, BODY_FONT, BODY_SIZE, avail))
 
+    def compute_height(self):
         height = PAD * 2 + len(self.title_lines) * TITLE_LEADING
+        if self.effective_trl:
+            height += 2 + BADGE_HEIGHT + 4
         if self.contact_lines:
             height += 6 + len(self.contact_lines) * BODY_LEADING
         if self.desc_lines:
@@ -160,6 +169,25 @@ def build_tree(card, depth=0):
     for child in card.get("subcards") or []:
         box.children.append(build_tree(child, depth + 1))
     return box
+
+
+def resolve_trl_inheritance(box):
+    """A card without its own TRL inherits the lowest (least mature)
+    effective TRL among its children, recursively. Inherited values are
+    flagged so the badge can be marked as derived rather than explicit."""
+    for child in box.children:
+        resolve_trl_inheritance(child)
+
+    if box.trl is not None:
+        box.effective_trl = box.trl
+        box.trl_inherited = False
+    else:
+        child_trls = [c.effective_trl for c in box.children if c.effective_trl is not None]
+        if child_trls:
+            box.effective_trl = min(child_trls)
+            box.trl_inherited = True
+
+    box.compute_height()
 
 
 def assign_primary(box, counter, direction):
@@ -254,14 +282,39 @@ def draw_box(c, box, direction, page_width, page_height):
     c.setLineWidth(1.6)
     c.rect(x_left, y_bottom, BOX_WIDTH, box.height, fill=0, stroke=1)
 
-    text_y = y_top - PAD - TITLE_SIZE * 0.85
+    text_y = y_top - PAD
     c.setFont(TITLE_FONT, TITLE_SIZE)
     c.setFillColor(HexColor(IMPORTANT_STAR_COLOR if box.important else "#111111"))
     for line in box.title_lines:
-        c.drawString(x_left + PAD, text_y, line)
+        c.drawString(x_left + PAD, text_y - TITLE_SIZE * 0.85, line)
         text_y -= TITLE_LEADING
     if box.important:
         c.setFillColor(HexColor("#111111"))
+
+    if box.effective_trl:
+        text_y -= 2
+        badge_color = trl_border_color(box.effective_trl)
+        badge_text = "TRL{}".format(box.effective_trl)
+        if box.trl_inherited:
+            badge_text += " ✦"
+        badge_w = stringWidth(badge_text, BADGE_FONT, BADGE_SIZE) + 2 * BADGE_PAD_X
+        badge_bottom = text_y - BADGE_HEIGHT
+        if box.trl_inherited:
+            # Hollow pill for an inherited (derived, not explicitly set) TRL.
+            c.setFillColor(HexColor("#ffffff"))
+            c.setStrokeColor(HexColor(badge_color))
+            c.setLineWidth(1)
+            c.roundRect(x_left + PAD, badge_bottom, badge_w, BADGE_HEIGHT, 3, fill=1, stroke=1)
+            c.setFillColor(HexColor(badge_color))
+        else:
+            c.setFillColor(HexColor(badge_color))
+            c.roundRect(x_left + PAD, badge_bottom, badge_w, BADGE_HEIGHT, 3, fill=1, stroke=0)
+            c.setFillColor(HexColor("#ffffff"))
+        c.setFont(BADGE_FONT, BADGE_SIZE)
+        c.drawCentredString(
+            x_left + PAD + badge_w / 2, badge_bottom + BADGE_HEIGHT / 2 - BADGE_SIZE * 0.35, badge_text
+        )
+        text_y = badge_bottom - 4
 
     if box.contact_lines:
         text_y -= 6
@@ -347,6 +400,7 @@ def main():
         root_card = yaml.load(f)
 
     root = build_tree(root_card)
+    resolve_trl_inheritance(root)
 
     counter = [0.0]
     assign_primary(root, counter, args.direction)
