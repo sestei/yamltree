@@ -12,6 +12,7 @@ Usage:
     python3 export_pdf.py [path/to/main.yaml] [-o output.pdf]
     python3 export_pdf.py --direction TB   # root on top, growing down
     python3 export_pdf.py --direction LR   # root on the left, growing right (default)
+    python3 export_pdf.py --collapse "Recycling Cavities" --collapse "Arm Cavities"
 
 Requires the `reportlab` pip package (no system/binary dependency).
 """
@@ -48,6 +49,10 @@ BADGE_FONT = "Helvetica-Bold"
 BADGE_SIZE = 7
 BADGE_HEIGHT = 13
 BADGE_PAD_X = 6
+COLLAPSE_LINE_LENGTH = 34
+COLLAPSE_LABEL_FONT = "Helvetica-Oblique"
+COLLAPSE_LABEL_SIZE = 9
+COLLAPSE_LABEL_COLOR = "#777777"
 
 
 def _hex(r, g, b):
@@ -131,6 +136,7 @@ class Box:
         self.title_lines = []
         self.contact_lines = []
         self.desc_lines = []
+        self.collapsed_count = 0
 
     def compute_content(self):
         self.trl, self.important = card_status(self.card)
@@ -163,11 +169,24 @@ class Box:
         self.height = height
 
 
-def build_tree(card, depth=0):
+def count_descendants(card):
+    total = 0
+    for child in card.get("subcards") or []:
+        total += 1 + count_descendants(child)
+    return total
+
+
+def build_tree(card, depth=0, collapse_titles=frozenset(), matched=None):
     box = Box(card, depth)
     box.compute_content()
-    for child in card.get("subcards") or []:
-        box.children.append(build_tree(child, depth + 1))
+    title = (card.get("title") or "Untitled").strip()
+    if title.casefold() in collapse_titles:
+        if matched is not None:
+            matched.add(title.casefold())
+        box.collapsed_count = count_descendants(card)
+    else:
+        for child in card.get("subcards") or []:
+            box.children.append(build_tree(child, depth + 1, collapse_titles, matched))
     return box
 
 
@@ -336,7 +355,48 @@ def draw_box(c, box, direction, page_width, page_height):
         draw_box(c, child, direction, page_width, page_height)
 
 
+def collect_collapsed(box, acc):
+    if box.collapsed_count:
+        acc.append(box)
+    for child in box.children:
+        collect_collapsed(child, acc)
+
+
+def collapse_label(box):
+    return "+{} hidden".format(box.collapsed_count)
+
+
+def draw_collapsed_indicator(c, box, direction, page_width, page_height):
+    """Draw a dashed line from a collapsed card out to a '+N hidden' label,
+    in the same place a single child would sit."""
+    x_left, y_bottom = box_rect(box, direction, page_width, page_height)
+    label = collapse_label(box)
+
+    c.setStrokeColor(HexColor(EDGE_COLOR))
+    c.setLineWidth(1.2)
+    c.setDash(3, 3)
+    c.setFont(COLLAPSE_LABEL_FONT, COLLAPSE_LABEL_SIZE)
+    c.setFillColor(HexColor(COLLAPSE_LABEL_COLOR))
+
+    if direction == "TB":
+        x_mid = x_left + BOX_WIDTH / 2
+        y_end = y_bottom - COLLAPSE_LINE_LENGTH
+        c.line(x_mid, y_bottom, x_mid, y_end)
+        c.setDash()
+        c.drawCentredString(x_mid, y_end - COLLAPSE_LABEL_SIZE - 2, label)
+    else:
+        y_mid = y_bottom + box.height / 2
+        x_start = x_left + BOX_WIDTH
+        x_end = x_start + COLLAPSE_LINE_LENGTH
+        c.line(x_start, y_mid, x_end, y_mid)
+        c.setDash()
+        c.drawString(x_end + 4, y_mid - COLLAPSE_LABEL_SIZE * 0.35, label)
+
+
 def draw_connectors(c, box, direction, page_width, page_height):
+    if box.collapsed_count:
+        draw_collapsed_indicator(c, box, direction, page_width, page_height)
+
     if not box.children:
         return
 
@@ -378,6 +438,26 @@ def draw_connectors(c, box, direction, page_width, page_height):
         draw_connectors(c, child, direction, page_width, page_height)
 
 
+def draw_metadata(c, root_card, page_height):
+    metadata = root_card.get("metadata") or {}
+    version = metadata.get("version")
+    date = metadata.get("date")
+    title = metadata.get("title")
+    parts = []
+    if title is not None:
+        parts.append(title)
+    if version is not None:
+        parts.append("v{}".format(version))
+    if date is not None:
+        parts.append(str(date))
+    if not parts:
+        return
+
+    c.setFont(BODY_FONT, 8)
+    c.setFillColor(HexColor("#888888"))
+    c.drawString(MARGIN, page_height - MARGIN + 12, "  ·  ".join(parts))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -393,13 +473,26 @@ def main():
         default="LR",
         help="LR: root on the left, growing right (default). TB: root on top, growing down.",
     )
+    parser.add_argument(
+        "--collapse",
+        action="append",
+        default=[],
+        metavar="TITLE",
+        help="Collapse the subtree under the card with this title (hide its descendants, "
+        "showing a '+N hidden' marker instead). May be given multiple times.",
+    )
     args = parser.parse_args()
 
     yaml = YAML(typ="safe")
     with open(args.yaml_file) as f:
         root_card = yaml.load(f)
 
-    root = build_tree(root_card)
+    collapse_titles = frozenset(t.strip().casefold() for t in args.collapse)
+    matched = set()
+    root = build_tree(root_card, collapse_titles=collapse_titles, matched=matched)
+    for title in args.collapse:
+        if title.strip().casefold() not in matched:
+            print("Warning: --collapse {!r} did not match any card title".format(title))
     resolve_trl_inheritance(root)
 
     counter = [0.0]
@@ -415,11 +508,23 @@ def main():
         page_width = secondary_extent + 2 * MARGIN
         page_height = primary_extent + 2 * MARGIN
 
+    collapsed_boxes = []
+    collect_collapsed(root, collapsed_boxes)
+    for box in collapsed_boxes:
+        label_w = stringWidth(collapse_label(box), COLLAPSE_LABEL_FONT, COLLAPSE_LABEL_SIZE)
+        if args.direction == "TB":
+            needed = MARGIN + box.secondary + box.height + COLLAPSE_LINE_LENGTH + COLLAPSE_LABEL_SIZE + 10
+            page_height = max(page_height, needed)
+        else:
+            needed = MARGIN + box.secondary + BOX_WIDTH + COLLAPSE_LINE_LENGTH + 4 + label_w + 10
+            page_width = max(page_width, needed)
+
     output = args.output or os.path.splitext(args.yaml_file)[0] + ".pdf"
     c = canvas.Canvas(output, pagesize=(page_width, page_height))
     c.setFillColor(HexColor("#ffffff"))
     c.rect(0, 0, page_width, page_height, fill=1, stroke=0)
 
+    draw_metadata(c, root_card, page_height)
     draw_connectors(c, root, args.direction, page_width, page_height)
     draw_box(c, root, args.direction, page_width, page_height)
 
