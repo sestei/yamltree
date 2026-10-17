@@ -13,6 +13,7 @@ Usage:
     python3 export_pdf.py --direction TB   # root on top, growing down
     python3 export_pdf.py --direction LR   # root on the left, growing right (default)
     python3 export_pdf.py --collapse "Recycling Cavities" --collapse "Arm Cavities"
+    python3 export_pdf.py --inherit-trl   # parents without a TRL show the worst descendant's
 
 Requires the `reportlab` pip package (no system/binary dependency).
 """
@@ -190,17 +191,18 @@ def build_tree(card, depth=0, collapse_titles=frozenset(), matched=None):
     return box
 
 
-def resolve_trl_inheritance(box):
+def resolve_trl_inheritance(box, inherit=False):
     """A card without its own TRL inherits the lowest (least mature)
-    effective TRL among its children, recursively. Inherited values are
-    flagged so the badge can be marked as derived rather than explicit."""
+    effective TRL among its children, recursively, when `inherit` is
+    enabled. Inherited values are flagged so the badge can be marked as
+    derived rather than explicit."""
     for child in box.children:
-        resolve_trl_inheritance(child)
+        resolve_trl_inheritance(child, inherit)
 
     if box.trl is not None:
         box.effective_trl = box.trl
         box.trl_inherited = False
-    else:
+    elif inherit:
         child_trls = [c.effective_trl for c in box.children if c.effective_trl is not None]
         if child_trls:
             box.effective_trl = min(child_trls)
@@ -481,6 +483,12 @@ def main():
         help="Collapse the subtree under the card with this title (hide its descendants, "
         "showing a '+N hidden' marker instead). May be given multiple times.",
     )
+    parser.add_argument(
+        "--inherit-trl",
+        action="store_true",
+        help="A card without its own TRL status shows the lowest (least mature) TRL found "
+        "among its descendants, marked with a hollow pill and a ✦. Off by default.",
+    )
     args = parser.parse_args()
 
     yaml = YAML(typ="safe")
@@ -493,7 +501,7 @@ def main():
     for title in args.collapse:
         if title.strip().casefold() not in matched:
             print("Warning: --collapse {!r} did not match any card title".format(title))
-    resolve_trl_inheritance(root)
+    resolve_trl_inheritance(root, inherit=args.inherit_trl)
 
     counter = [0.0]
     assign_primary(root, counter, args.direction)
